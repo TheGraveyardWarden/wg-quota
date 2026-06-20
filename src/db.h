@@ -10,12 +10,13 @@ struct peer_info
   uint64_t quota_bytes;
   uint64_t used_bytes;
   uint64_t last_used_bytes;
+  int64_t deadline;
   int blocked;
 };
 
 static inline void peer_info_print(struct peer_info *info, const char *name)
 {
-  printf("peer_info %s { quota: %llu, used: %llu, last_used: %llu, blocked: %d }\n", name, info->quota_bytes, info->used_bytes, info->last_used_bytes, info->blocked);
+  printf("peer_info %s { quota: %llu, used: %llu, last_used: %llu, deadline: %lld, blocked: %d }\n", name, info->quota_bytes, info->used_bytes, info->last_used_bytes, info->deadline, info->blocked);
 }
 
 struct db_funcs

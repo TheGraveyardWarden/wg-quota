@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <unistd.h>
+#include <time.h>
 
 #include "db.h"
 #include "wg.h"
@@ -20,6 +21,7 @@ loop:
 
   struct peer_stats *p;
   struct peer_info info;
+  time_t now;
   vector_for_each(&peers, p)
   {
     bool exists = db_peer_exists(db, p->pubkey);
@@ -42,6 +44,30 @@ loop:
       _last_used_bytes += info.used_bytes;
     _used_bytes = _total;
 
+    if (info.deadline == 0)
+      goto check_bytes;
+    now = time(NULL);
+    if (now > info.deadline)
+    {
+      if (!_blocked)
+      {
+        printf("%s deadline has been passed: deadline: %lld\tnow: %lld | disabling...\n", p->ip, info.deadline, now);
+        fw_disable(fw, p->ip);
+        _blocked = 1;
+      }
+      goto decided;
+    }
+    else
+    {
+      if (_blocked)
+      {
+        printf("%s deadline has been expanded: deadline: %lld\tnow: %lld | enabling...\n", p->ip, info.deadline, now);
+        fw_enable(fw, p->ip);
+        _blocked = 0;
+      }
+    }
+
+check_bytes:
     if (_used_bytes + _last_used_bytes > info.quota_bytes)
     {
       if (!_blocked)
@@ -61,6 +87,7 @@ loop:
       }
     }
 
+decided:
     printf("updating %s: used: %llu, last_used: %llu, blocked: %d\n", p->ip, _used_bytes, _last_used_bytes, _blocked);
 
     rc = db_update_peer_info(db, p->pubkey, _used_bytes, _last_used_bytes, _blocked);

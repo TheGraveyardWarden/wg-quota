@@ -32,7 +32,7 @@ int db_sql_get_peer_info(struct db_sql *sql, const char *pubkey, struct peer_inf
 {
   int ret = -1;
   sqlite3_stmt *stmt;
-  sqlite3_prepare_v2(sql->db, "SELECT quota_bytes, used_bytes, last_used_bytes, blocked FROM peers WHERE pubkey = ?;", -1, &stmt, NULL);
+  sqlite3_prepare_v2(sql->db, "SELECT quota_bytes, used_bytes, last_used_bytes, deadline, blocked FROM peers WHERE pubkey = ?;", -1, &stmt, NULL);
   sqlite3_bind_text(stmt, 1, pubkey, -1, SQLITE_STATIC);
   int rc = sqlite3_step(stmt);
   if (rc == SQLITE_ROW)
@@ -40,7 +40,8 @@ int db_sql_get_peer_info(struct db_sql *sql, const char *pubkey, struct peer_inf
     out->quota_bytes = (uint64_t)sqlite3_column_int64(stmt, 0);
     out->used_bytes = (uint64_t)sqlite3_column_int64(stmt, 1);
     out->last_used_bytes = (uint64_t)sqlite3_column_int64(stmt, 2);
-    out->blocked = (int)sqlite3_column_int(stmt, 3);
+    out->deadline = (int64_t)sqlite3_column_int64(stmt, 3);
+    out->blocked = (int)sqlite3_column_int(stmt, 4);
     ret = 0;
   }
   sqlite3_finalize(stmt);
@@ -94,6 +95,7 @@ static struct db* db_sql_init(const char *path)
     "quota_bytes INTEGER NOT NULL,"
     "used_bytes INTEGER NOT NULL,"
     "last_used_bytes INTEGER NOT NULL,"
+    "deadline INTEGER NOT NULL DEFAULT 0,"
     "blocked INTEGER NOT NULL DEFAULT 0"
     ");";
   char *errmsg = NULL;
