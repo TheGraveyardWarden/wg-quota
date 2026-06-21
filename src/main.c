@@ -6,13 +6,17 @@
 #include "wg.h"
 #include "fw.h"
 
+#define DB_FILE "./wg.db"
+#define WGCTL_INTERFACE "wg0"
+#define SLEEP_TIME 10
+
 int main()
 {
-  struct db *db = db_init("./wg.db");
+  struct db *db = db_init(DB_FILE);
   struct fw *fw = fw_init();
   struct vector peers = vector(struct peer_stats);
 loop:
-  int rc = wg_get_peer_stats(&peers, "wg1");
+  int rc = wg_get_peer_stats(&peers, WGCTL_INTERFACE);
   if (rc)
   {
     fprintf(stderr, "wg_get_peer_stats(): error\n");
@@ -98,7 +102,7 @@ decided:
     }
   }
   peers.len = 0;
-  sleep(1);
+  sleep(SLEEP_TIME);
   goto loop;
 
   vector_delete(&peers);
