@@ -55,8 +55,6 @@ loop:
     {
       if (!_blocked)
       {
-        printf("%s deadline has been passed: deadline: %lld\tnow: %lld | disabling...\n", p->ip, info.deadline, now);
-        fw_disable(fw, p->ip);
         _blocked = 1;
       }
       goto decided;
@@ -65,8 +63,6 @@ loop:
     {
       if (_blocked)
       {
-        printf("%s deadline has been expanded: deadline: %lld\tnow: %lld | enabling...\n", p->ip, info.deadline, now);
-        fw_enable(fw, p->ip);
         _blocked = 0;
       }
     }
@@ -76,8 +72,6 @@ check_bytes:
     {
       if (!_blocked)
       {
-        printf("%s surpassed quota: %llu/%llu | disabling...\n", p->ip, _used_bytes+_last_used_bytes, info.quota_bytes);
-        fw_disable(fw, p->ip);
         _blocked = 1;
       }
     }
@@ -85,14 +79,17 @@ check_bytes:
     {
       if (_blocked)
       {
-        printf("%s found more quota: %llu/%llu | enabling...\n", p->ip, _used_bytes+_last_used_bytes, info.quota_bytes);
-        fw_enable(fw, p->ip);
         _blocked = 0;
       }
     }
 
 decided:
     printf("updating %s: used: %llu, last_used: %llu, blocked: %d\n", p->ip, _used_bytes, _last_used_bytes, _blocked);
+
+    if (_blocked && !info.blocked)
+      fw_disable(fw, p->ip);
+    else if (!_blocked && info.blocked)
+      fw_enable(fw, p->ip);
 
     rc = db_update_peer_info(db, p->pubkey, _used_bytes, _last_used_bytes, _blocked);
     if (rc < 0)
