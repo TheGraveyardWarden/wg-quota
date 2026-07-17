@@ -1,6 +1,10 @@
 #ifndef _FW_H_
 #define _FW_H_
 
+#include <stdlib.h>
+
+struct fw;
+
 struct fw_funcs
 {
   int(*disable)(struct fw*, const char*);
@@ -17,7 +21,7 @@ static inline int fw_disable(struct fw *fw, const char *ip)
   return fw->func.disable(fw, ip);
 }
 
-static inline fw_enable(struct fw* fw, const char *ip)
+static inline int fw_enable(struct fw* fw, const char *ip)
 {
   return fw->func.enable(fw, ip);
 }

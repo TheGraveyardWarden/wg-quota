@@ -1,4 +1,5 @@
 #include "fw.h"
+#include "core.h"
 
 #include <stdlib.h>
 #include <string.h>
@@ -42,8 +43,8 @@ static struct fw* fw_iptables_init()
   }
   bzero(fw, sizeof(struct fw_iptables));
 
-  fw->func.disable = fw_iptables_disable;
-  fw->func.enable = fw_iptables_enable;
+  SET_FUNC(fw->func.disable, fw_iptables_disable);
+  SET_FUNC(fw->func.enable, fw_iptables_enable);
 
   return (struct fw*)fw;
 }

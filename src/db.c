@@ -1,4 +1,5 @@
 #include "db.h"
+#include "core.h"
 
 #include <sqlite3.h>
 #include <stdlib.h>
@@ -76,10 +77,10 @@ static struct db* db_sql_init(const char *path)
   }
   bzero(sql, sizeof(struct db_sql));
 
-  sql->func.close = db_sql_close;
-  sql->func.peer_exists = db_sql_peer_exists;
-  sql->func.get_peer_info = db_sql_get_peer_info;
-  sql->func.update_peer_info = db_sql_update_peer_info;
+  SET_FUNC(sql->func.close, db_sql_close);
+  SET_FUNC(sql->func.peer_exists, db_sql_peer_exists);
+  SET_FUNC(sql->func.get_peer_info, db_sql_get_peer_info);
+  SET_FUNC(sql->func.update_peer_info, db_sql_update_peer_info);
 
   int rc = sqlite3_open(path, &sql->db);
   if (rc != SQLITE_OK)
